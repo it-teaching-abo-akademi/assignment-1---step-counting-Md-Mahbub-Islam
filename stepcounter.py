@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.signal as signal
 
 #Simple function to visualize 4 arrays that are given to it
 def visualize_data(timestamps, x_arr,y_arr,z_arr,s_arr):
@@ -111,27 +112,87 @@ def plot_raw_data(timestamps, x_array, y_array, z_array):
 
   plt.show()
 
+def advanced_step_counter(timestamps, x_array, y_array, z_array):
+  print("Advanced step counter")
+
+  #magnitude array calculation
+  m_arr = []
+  for i, x in enumerate(x_array):
+      m_arr.append(magnitude(x_array[i],y_array[i],z_array[i]))
+
+  #plot magnitude array
+  plt.figure(2)
+  plt.plot(timestamps, m_arr, color="red", linewidth=1.0)
+  plt.xlabel("Time Steps")
+  plt.ylabel("Acceleration Magnitude")
+  plt.show()
+
+
+
+  #low pass filter
+  b, a = signal.butter(3, 0.05, 'low', analog=False)
+  x_array = signal.filtfilt(b, a, x_array)
+  y_array = signal.filtfilt(b, a, y_array)
+  z_array = signal.filtfilt(b, a, z_array)
+
+  #magnitude array calculation
+  m_arr = []
+  for i, x in enumerate(x_array):
+      m_arr.append(magnitude(x_array[i], y_array[i], z_array[i]))
+
+  #remove gravity from magnitude array at 9.8
+  for i, x in enumerate(m_arr):
+      m_arr[i] = m_arr[i] - 9.8
+
+
+  #plot magnitude
+  plt.figure(2)
+  plt.plot(timestamps, m_arr, color="red", linewidth=1.0)
+  plt.xlabel("Time Steps")
+  plt.ylabel("Acceleration Magnitude")
+  plt.show()
+
+  #find peaks of magnitude above certain threshold
+
+  peaks, _ = signal.find_peaks(m_arr, height=1)
+  print(peaks)
+  #convert to numpy array
+  peaks = np.asarray(peaks)
+  timestamps = np.asarray(timestamps)
+  m_arr = np.asarray(m_arr)
+  #plot peaks
+  plt.figure(2)
+  plt.plot(timestamps, m_arr)
+  plt.plot(timestamps[peaks], m_arr[peaks], "x")
+  plt.xlabel("Time Steps")
+  plt.ylabel("Acceleration Magnitude")
+  plt.show()
+
+
 def main():
   #read data from a measurement file, change the inoput file name if needed
-  # timestamps, x_array, y_array, z_array = read_data("accelerometer_data.csv")
-  timestamps, x_array, y_array, z_array = read_data("walk1.csv")
+  # timestamps, x_array, y_array, z_array = read_data("walk1.csv")
+  timestamps, x_array, y_array, z_array = read_data("slow_fast_jump.csv")
+
 
   #plot timestamps, x_array, y_array, z_array
-  #plot_raw_data(timestamps, x_array, y_array, z_array)
+  plot_raw_data(timestamps, x_array, y_array, z_array)
 
   #Chek that the data does not produce errors
   if(not check_data(timestamps, x_array,y_array,z_array)):
     return
 
-  # #Count the steps based on array of measurements from accelerometer
-  st = count_steps(timestamps, x_array, y_array, z_array)
-  #Print the result
-  print("This data contains "+str(len(st))+" steps according to current algorithm")
-  # #convert array of step times into graph-compatible format
-  s_array = generate_step_array(timestamps, st)
 
-  # #visualize data and steps
-  visualize_data(timestamps, x_array,y_array,z_array,s_array)
+  st = advanced_step_counter(timestamps, x_array, y_array, z_array)
+  # #Count the steps based on array of measurements from accelerometer
+  # st = count_steps(timestamps, x_array, y_array, z_array)
+  # #Print the result
+  # print("This data contains "+str(len(st))+" steps according to current algorithm")
+  # # #convert array of step times into graph-compatible format
+  # s_array = generate_step_array(timestamps, st)
+  #
+  # # #visualize data and steps
+  # visualize_data(timestamps, x_array,y_array,z_array,s_array)
 
 main()
 
