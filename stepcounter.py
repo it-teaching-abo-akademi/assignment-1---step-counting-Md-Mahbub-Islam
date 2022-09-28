@@ -160,6 +160,9 @@ def advanced_step_counter(timestamps, x_array, y_array, z_array):
   peaks = np.asarray(peaks)
   timestamps = np.asarray(timestamps)
   m_arr = np.asarray(m_arr)
+
+  print(f"Total number of peaks: {len(peaks)}")
+
   #plot peaks
   plt.figure(2)
   plt.plot(timestamps, m_arr)
